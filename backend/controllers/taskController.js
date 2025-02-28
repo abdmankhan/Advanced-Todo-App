@@ -18,6 +18,8 @@ const createTask = asyncHandler( async (req, res) => {
 // Get all tasks
 const getTasks = asyncHandler (async (req, res) => {
   const tasks = await Task.find({userId : req.user._id});
+  
+  
   res.status(201).json(tasks)
 })
 

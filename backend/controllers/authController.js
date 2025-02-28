@@ -65,7 +65,7 @@ const login = asyncHandler(async (req, res) => {
 // @route GET /api/auth/profile
 // @access Private
 const getProfile = asyncHandler(async (req, res) => {
-  
+  // this req.user is coming from the protect middleware not from the react frontend
   res.status(200).json(req.user)
 })
 

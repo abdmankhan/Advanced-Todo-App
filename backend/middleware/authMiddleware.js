@@ -3,6 +3,8 @@ import asyncHandler from "express-async-handler";
 import User from "../models/User.js";
 
 const protect = asyncHandler(async (req, res, next) => {
+  
+  
   let token;
 
   token = req.cookies.jwt; // get the token from the cookie
@@ -15,6 +17,7 @@ const protect = asyncHandler(async (req, res, next) => {
       req.user = await User.findById(decoded.userId).select("-password"); // get the user by id and exclude the password
       
       next();
+      // now only we have req.user in the request object and we can access in the next middleware or controller called after this middleware
     } catch (error) {
       res.status(401);
       throw new Error("Not authorized, invalid token");
