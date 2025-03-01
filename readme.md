@@ -17,3 +17,7 @@ Phase 3: Advanced Features
 🔸 Task prioritization
 🔸 Voice input
 🔸 Drag-and-drop & analytics
+
+NOTES:
+
+1. If you want to navigate after Zustand's state update, always use useEffect because Zustand updates are asynchronous.

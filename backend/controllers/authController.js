@@ -66,7 +66,15 @@ const login = asyncHandler(async (req, res) => {
 // @access Private
 const getProfile = asyncHandler(async (req, res) => {
   // this req.user is coming from the protect middleware not from the react frontend
-  res.status(200).json(req.user)
+  res.status(200).json(
+    {
+      user : {
+        _id : req.user._id,
+        name : req.user.name,
+        email : req.user.email
+      }
+    }
+  )
 })
 
 // @desc    Update user profile
