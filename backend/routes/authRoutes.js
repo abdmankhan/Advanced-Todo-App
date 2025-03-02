@@ -7,6 +7,7 @@ import {
   getProfile,
   updateProfile,
   logout,
+  googleSignIn,
 } from "../controllers/authController.js";
 
 const router = express.Router();
@@ -16,7 +17,7 @@ router.post("/signup", signup);
 router.get("/getProfile", protect, getProfile);
 router.put("/updateProfile", protect, updateProfile);
 router.post("/logout", logout);
-
 router.get("/dummy", dummy);
+router.post('/google', googleSignIn);
 
 export default router;

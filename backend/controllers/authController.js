@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
-
+import { OAuth2Client } from "google-auth-library";
 
 // @desc    Register a new user
 // @route   POST /api/auth/signup
@@ -36,28 +36,27 @@ const signup = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Invalid user data");
   }
-
 });
 
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
 const login = asyncHandler(async (req, res) => {
-  const {email, password} = req.body;
-  const user = await User.findOne({email})
-  if(user && (await user.matchPassword(password))){
-    generateToken(res, user._id)
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
+  if (user && (await user.matchPassword(password))) {
+    generateToken(res, user._id);
     res.status(201).json({
-      user : {
-        _id : user._id,
-        name : user.name,
-        email : user.email
-      }
-    })
-    console.log("User logged in")
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+    console.log("User logged in");
   } else {
-    res.status(401)
-    throw new Error("Invalid email or password")
+    res.status(401);
+    throw new Error("Invalid email or password");
   }
 });
 
@@ -65,53 +64,52 @@ const login = asyncHandler(async (req, res) => {
 // @route GET /api/auth/profile
 // @access Private
 const getProfile = asyncHandler(async (req, res) => {
+  res.json(req.user);
   // this req.user is coming from the protect middleware not from the react frontend
-  res.status(200).json(
-    {
-      user : {
-        _id : req.user._id,
-        name : req.user.name,
-        email : req.user.email
-      }
-    }
-  )
-})
+  res.status(200).json({
+    user: {
+      _id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      googleId: req.user.googleId,
+    },
+  });
+});
 
 // @desc    Update user profile
 // @route   PUT /api/auth/profile
 // @access  Private
 
 const updateProfile = asyncHandler(async (req, res) => {
-  
   const user = req.user;
-  if(user) {
+  if (user) {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
-    if(req.body.password) {
+    if (req.body.password) {
       user.password = req.body.password;
     }
 
     const updatedUser = await user.save();
     res.status(200).json({
-      _id : updatedUser._id,
-      name : updatedUser.name,
-      email : updatedUser.email
-    })
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+    });
   }
-})
+});
 
 //  @desc    Logout user
 //  @route   GET /api/auth/logout
 //  @access  Private
-const logout = asyncHandler( async(req, res) => {
+const logout = asyncHandler(async (req, res) => {
   // const token = req.cookies.jwt;
   // const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  res.cookie('jwt', "Logged out clicked", {
-    httpOnly : true,
-    expires : new Date(0),
-  })
-  res.status(200).json({message : 'Logout Successful'})
-})
+  res.cookie("jwt", "Logged out clicked", {
+    httpOnly: true,
+    expires: new Date(0),
+  });
+  res.status(200).json({ message: "Logout Successful" });
+});
 
 // @desc    Dummy route
 // @route   GET /api/auth/dummy
@@ -120,4 +118,44 @@ const dummy = asyncHandler(async (req, res) => {
   res.send("Dummy world");
 });
 
-export { signup, login, dummy, getProfile, updateProfile, logout };
+// @desc Google OAuth
+// @route GET /api/auth/google
+// @access Public
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const googleSignIn = async (req, res) => {
+  // try {
+  //   const { token } = req.body;
+  //   console.log(token);
+  //   const ticket = await client.verifyIdToken({
+  //     idToken: token,
+  //     audience: process.env.GOOGLE_CLIENT_ID,
+  //   });
+
+  //   const payload = ticket.getPayload();
+  //   const { email, name, sub: googleId } = payload;
+
+  //   let user = await User.findOne({ email });
+
+  //   if (!user) {
+  //     user = await User.create({ email, name, googleId });
+  //   }
+  //   console.log(user);
+  //   generateToken(res, user._id); // Send JWT in cookie
+  //   // res.status(200).json({ message: "Google Sign-in Successful", user });
+  // } catch (error) {
+  //   console.error("Google Login Error:", error);
+  //   res.status(400).json({ message: "Invalid Google Token" });
+  // }
+};
+
+export {
+  signup,
+  login,
+  dummy,
+  getProfile,
+  updateProfile,
+  logout,
+  googleSignIn,
+};

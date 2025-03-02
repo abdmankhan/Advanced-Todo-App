@@ -11,6 +11,7 @@ import {
 import useAuthStore from "../store/authStore";
 import { Link as RouterLink } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -35,7 +36,8 @@ const Signup = () => {
 
   useEffect(() => {
     if (user) {
-      console.log(`Signup page loaded`);
+      // console.log(`Signup page loaded`);
+      toast.success(`Logged in as ${user.name}`);
       navigate("/app");
     }
   }, [user]);
