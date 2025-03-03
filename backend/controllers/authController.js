@@ -161,9 +161,9 @@ const googleSignIn = asyncHandler(async (req, res) => {
     }
     // console.log("USER ID", user._id);
     // Reuse your existing token generation
-    const jwttoken = await generateToken(res, user._id);
+    generateToken(res, user._id);
     // console.log("JWT TOKEN", jwttoken);
-    // console.log("Google user logged in:", user.email);
+    console.log("Google user logged in:", user.email);
 
     const response = res.status(200).json({
       user: {
@@ -174,7 +174,7 @@ const googleSignIn = asyncHandler(async (req, res) => {
         otpVerified: user.otpVerified,
       },
     });
-    console.log(response.user);
+    
   } catch (error) {
     console.error("Google authentication error:", error);
     res

@@ -15,8 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { Navigate, Link as RouterLink } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { toast } from "react-toastify";
-import axios from "axios";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+
 
 
 
@@ -38,6 +37,7 @@ const Login = () => {
 
       
     } catch(error) {
+      toast.error("Login failed");
       console.error("Login failed:", error);
     }
     finally {

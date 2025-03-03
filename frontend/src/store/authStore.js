@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -16,9 +17,11 @@ const useAuthStore = create((set) => ({
         { email, password },
         { withCredentials: true } // Sends & receives cookies
       );
+      // toast.success("Login successful");
       console.log(res.data);
       set({ user: res.data.user }); // Store user data
     } catch (error) {
+      // toast.error("Login failed");
       console.error("Login failed:", error.response?.data?.message);
     } finally {
       set({ isLoading: false });
@@ -77,6 +80,7 @@ const useAuthStore = create((set) => ({
         { token },
         { withCredentials: true }
       );
+      console.log('Iske baad hain...');
       set({ user: res.data.user });
     } catch (error) {
       console.error("Google login failed:", error.response?.data?.message);
