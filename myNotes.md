@@ -50,3 +50,9 @@ Task.findOne(req.params.id) returns a Promise, so task.title is undefined becaus
 </> i was doing the findOne and it takes in query object not id, have to use findbyID only
 
 4. Google login flow [Video Moment](https://youtu.be/a75PNthqQOI?t=64)
+5. **Issue 2 login with google**
+   # the resolution was that i have to be wary with the things that i wrote in authController route, always the frontend & google was sending me correct thing it was at the generateToken the first issue
+   - try multiple console logs
+   - put the login function is sync with the exisiting jwt login, things has to similar
+   - there must not be multiple responses,
+   - in my app, since i am always loading getProfile page, althought it's a protected route, hence to check for protect it goes to protect and in that time router.post response with a res json and later again responded with a new res json , that caused error, there must not be more than one response per route

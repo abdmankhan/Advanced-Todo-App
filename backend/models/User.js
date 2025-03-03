@@ -1,38 +1,43 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
-const userSchema = mongoose.Schema({
-  name : {
-    type : String,
-    required : true
-  }, 
-  email : {
-    type : String,
-    required : true,
-    unique : true
+const userSchema = mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: function () {
+        return !this.googleId; // Password is required only for non-Google users
+      },
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    otpVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
-  password : {
-    type : String,
-  },
-  googleId : {
-    type : String,
-    unique : true,
-    sparse : true
-  }, 
-  otpVerified : {
-    type : Boolean,
-    default : false
+  {
+    timestamps: true,
   }
-},
-{
-  timestamps : true
-});
+);
 
 
 userSchema.pre("save", async function (next) {
   // middleware to hash the password before saving it to the database
 
-  if (!this.isModified("password")) {
+  if (!this.isModified("password") || !this.password) {
     // if the password is not modified, call the next middleware
     next(); // call the next middleware
   }

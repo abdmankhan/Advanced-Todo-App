@@ -1,13 +1,13 @@
 import asyncHandler from "express-async-handler";
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
-import { OAuth2Client } from "google-auth-library";
+import { verifyGoogleToken } from "../config/googleOAuth.js";
 
 // @desc    Register a new user
 // @route   POST /api/auth/signup
 // @access  Public
 const signup = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, googleId, otpVerified } = req.body;
   console.log(req.body);
 
   const userExits = await User.findOne({ email });
@@ -20,6 +20,8 @@ const signup = asyncHandler(async (req, res) => {
     name,
     email,
     password,
+    googleId,
+    otpVerified,
   });
 
   if (user) {
@@ -29,6 +31,8 @@ const signup = asyncHandler(async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        googleId: user.googleId,
+        otpVerified: user.otpVerified,
       },
     });
     console.log("User created");
@@ -64,7 +68,6 @@ const login = asyncHandler(async (req, res) => {
 // @route GET /api/auth/profile
 // @access Private
 const getProfile = asyncHandler(async (req, res) => {
-  res.json(req.user);
   // this req.user is coming from the protect middleware not from the react frontend
   res.status(200).json({
     user: {
@@ -122,33 +125,63 @@ const dummy = asyncHandler(async (req, res) => {
 // @route GET /api/auth/google
 // @access Public
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// Add this new controller to your existing authRoutes
+const googleSignIn = asyncHandler(async (req, res) => {
+  try {
+    const { token } = req.body;
+    // console.log(` REQUEST.BODY`,req.body);
+    // console.log("Received Google token:", token);
 
-const googleSignIn = async (req, res) => {
-  // try {
-  //   const { token } = req.body;
-  //   console.log(token);
-  //   const ticket = await client.verifyIdToken({
-  //     idToken: token,
-  //     audience: process.env.GOOGLE_CLIENT_ID,
-  //   });
+    const googleUser = await verifyGoogleToken(token);
+    // console.log("Google user payload:", googleUser);
 
-  //   const payload = ticket.getPayload();
-  //   const { email, name, sub: googleId } = payload;
+    // Check existing users with same email or googleId
+    let user = await User.findOne({ email: googleUser.email });
 
-  //   let user = await User.findOne({ email });
+    console.log("USERID", user);
+    // Case 1: Existing email user without googleId (merge accounts)
+    if (user && !user.googleId) {
+      console.log("Merging accounts for:", user.email);
+      user.googleId = googleUser.sub;
+      user.otpVerified = true;
+      await user.save();
+    }
 
-  //   if (!user) {
-  //     user = await User.create({ email, name, googleId });
-  //   }
-  //   console.log(user);
-  //   generateToken(res, user._id); // Send JWT in cookie
-  //   // res.status(200).json({ message: "Google Sign-in Successful", user });
-  // } catch (error) {
-  //   console.error("Google Login Error:", error);
-  //   res.status(400).json({ message: "Invalid Google Token" });
-  // }
-};
+    // Case 2: New Google user
+    if (!user) {
+      console.log("Creating new user for:", googleUser.email);
+      user = await User.create({
+        name: googleUser.name,
+        email: googleUser.email,
+        googleId: googleUser.sub,
+        otpVerified: true,
+        password: undefined, // Explicitly set as undefined
+      });
+      // console.log("USER", user);
+      // console.log(`New Google user created`, user._id);
+    }
+    // console.log("USER ID", user._id);
+    // Reuse your existing token generation
+    generateToken(res, user._id);
+    // console.log("JWT TOKEN", jwttoken);
+    console.log("Google user logged in:", user.email);
+    
+    res.status(200).json({
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        googleId: user.googleId,
+        otpVerified: user.otpVerified,
+      },
+    });
+  } catch (error) {
+    console.error("Google authentication error:", error);
+    res
+      .status(401)
+      .json({ message: "Google authentication failed", error: error.message });
+  }
+});
 
 export {
   signup,

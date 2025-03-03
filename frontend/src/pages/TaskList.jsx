@@ -46,6 +46,7 @@ const TaskList = () => {
 
     try {
       await axios.delete(`${API_URL}/api/tasks/${taskId}`, {
+        
         withCredentials: true,
       });
 

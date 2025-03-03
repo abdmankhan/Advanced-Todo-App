@@ -3,29 +3,28 @@ import asyncHandler from "express-async-handler";
 import User from "../models/User.js";
 
 const protect = asyncHandler(async (req, res, next) => {
-  
-  
-  let token;
+  try {
+    const token = req.cookies.jwt;
 
-  token = req.cookies.jwt; // get the token from the cookie
-
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET); // verify the token with the secret key
-      // console.log(decoded); // log the decoded
-      
-      req.user = await User.findById(decoded.userId).select("-password"); // get the user by id and exclude the password
-      
-      next();
-      // now only we have req.user in the request object and we can access in the next middleware or controller called after this middleware
-    } catch (error) {
-      res.status(401);
-      throw new Error("Not authorized, invalid token");
+    if (!token) {
+      return res.status(401).json({ message: "Not authorized, no token" });
     }
-  } else {
-    res.status(401);
-    throw new Error("Not authorized, no token");
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.userId).select("-password");
+
+    if (!req.user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    next(); // ✅ Only call next() if no response has been sent
+  } catch (error) {
+    console.error("Auth error:", error.message);
+
+    if (!res.headersSent) {
+      res.status(401).json({ message: "Invalid or expired token" });
+    }
   }
 });
 
-export { protect }; // export the protect function
+export { protect };

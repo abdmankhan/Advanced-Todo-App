@@ -60,10 +60,26 @@ const useAuthStore = create((set) => ({
         { name, email, password },
         { withCredentials: true }
       );
-      console.log(res.data);
+      // console.log(res.data);
       set({ user: res.data.user });
     } catch (error) {
       console.error("Signup failed:", error.response?.data?.message);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  // Google login function
+  googleLogin: async (token) => {
+    set({ isLoading: true });
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/auth/google`,
+        { token },
+        { withCredentials: true }
+      );
+      set({ user: res.data.user });
+    } catch (error) {
+      console.error("Google login failed:", error.response?.data?.message);
     } finally {
       set({ isLoading: false });
     }
