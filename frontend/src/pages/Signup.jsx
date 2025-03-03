@@ -7,11 +7,13 @@ import {
   Button,
   Link,
   Box,
+  Divider,
 } from "@mui/material";
 import useAuthStore from "../store/authStore";
 import { Link as RouterLink } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { GoogleLogin } from "@react-oauth/google";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ const Signup = () => {
     formState: { errors },
   } = useForm();
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuthStore();
+  const { signup, googleLogin } = useAuthStore();
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -34,6 +36,18 @@ const Signup = () => {
     }
   };
 
+  // Google login
+  const handleGoogleLogin = async (credentialResponse) => {
+    setLoading(true);
+    try {
+      await googleLogin(credentialResponse.credential);
+    } catch (error) {
+      toast.error("Google login failed");
+      console.error("Google login error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     if (user) {
       // console.log(`Signup page loaded`);
@@ -57,6 +71,28 @@ const Signup = () => {
         </Typography>
 
         <Box sx={{ mt: 4 }}>
+          <GoogleLogin
+            onSuccess={handleGoogleLogin}
+            onError={() => {
+              toast.error("Google login failed");
+            }}
+            useOneTap
+            auto_select
+            render={({ onClick, disabled }) => (
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<Google />}
+                sx={{ mb: 2 }}
+                onClick={onClick}
+                disabled={disabled}
+              >
+                Continue with Google
+              </Button>
+            )}
+          />
+
+          <Divider sx={{ my: 3 }}>OR</Divider>
           <form onSubmit={handleSubmit(onSubmit)}>
             <TextField
               fullWidth
