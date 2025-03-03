@@ -125,11 +125,10 @@ const dummy = asyncHandler(async (req, res) => {
 // @route GET /api/auth/google
 // @access Public
 
-// Add this new controller to your existing authRoutes
 const googleSignIn = asyncHandler(async (req, res) => {
   try {
     const { token } = req.body;
-    // console.log(` REQUEST.BODY`,req.body);
+    // console.log( REQUEST.BODY,req.body);
     // console.log("Received Google token:", token);
 
     const googleUser = await verifyGoogleToken(token);
@@ -138,7 +137,7 @@ const googleSignIn = asyncHandler(async (req, res) => {
     // Check existing users with same email or googleId
     let user = await User.findOne({ email: googleUser.email });
 
-    console.log("USERID", user);
+    // console.log("USERID", user);
     // Case 1: Existing email user without googleId (merge accounts)
     if (user && !user.googleId) {
       console.log("Merging accounts for:", user.email);
@@ -158,15 +157,15 @@ const googleSignIn = asyncHandler(async (req, res) => {
         password: undefined, // Explicitly set as undefined
       });
       // console.log("USER", user);
-      // console.log(`New Google user created`, user._id);
+      // console.log(New Google user created, user._id);
     }
     // console.log("USER ID", user._id);
     // Reuse your existing token generation
-    generateToken(res, user._id);
+    const jwttoken = await generateToken(res, user._id);
     // console.log("JWT TOKEN", jwttoken);
-    console.log("Google user logged in:", user.email);
-    
-    res.status(200).json({
+    // console.log("Google user logged in:", user.email);
+
+    const response = res.status(200).json({
       user: {
         _id: user._id,
         name: user.name,
@@ -175,6 +174,7 @@ const googleSignIn = asyncHandler(async (req, res) => {
         otpVerified: user.otpVerified,
       },
     });
+    console.log(response.user);
   } catch (error) {
     console.error("Google authentication error:", error);
     res

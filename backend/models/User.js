@@ -28,16 +28,13 @@ const userSchema = mongoose.Schema(
       default: false,
     },
   },
-  {
-    timestamps: true,
-  }
 );
 
 
 userSchema.pre("save", async function (next) {
   // middleware to hash the password before saving it to the database
 
-  if (!this.isModified("password") || !this.password) {
+  if (!this.isModified("password") || this.password === "") {
     // if the password is not modified, call the next middleware
     next(); // call the next middleware
   }
