@@ -6,6 +6,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import Apps from "./pages/Apps";
 import Navbar from "./components/Navbar.jsx";
@@ -45,6 +46,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           {/* Protected Routes */}
           <Route path="/app" element={<PrivateRoute element={<Apps />} />} />
           <Route

@@ -19,10 +19,12 @@ const useAuthStore = create((set) => ({
       );
       // toast.success("Login successful");
       console.log(res.data);
+      
       set({ user: res.data.user }); // Store user data
     } catch (error) {
-      // toast.error("Login failed");
-      console.error("Login failed:", error.response?.data?.message);
+    //   const errorMessage = error.response?.data?.message || "Login failed";
+    //   console.error("Login failed:", errorMessage);
+      throw error; // Rethrow error for component to catch
     } finally {
       set({ isLoading: false });
     }
@@ -84,6 +86,41 @@ const useAuthStore = create((set) => ({
       set({ user: res.data.user });
     } catch (error) {
       console.error("Google login failed:", error.response?.data?.message);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  // forgot - password fuction
+  forgotPassword: async (email) => {
+    set({ isLoading: true });
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/auth/forgot-password`,
+        { email },
+        { withCredentials: true }
+      );
+      console.log(res.data);
+      toast.success("Check your email for reset link");
+    } catch (error) {
+      console.error("Forgot password failed:", error.response?.data?.message);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  // reset - password function
+  resetPassword: async (token, password) => {
+    console.log("New Password is", password);
+    set({ isLoading: true });
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/auth/reset-password`,
+        { token, password },
+        { withCredentials: true }
+      );
+      console.log(res.data);
+      toast.success("Password reset successful");
+    } catch (error) {
+      console.error("Reset password failed:", error.response?.data?.message);
     } finally {
       set({ isLoading: false });
     }

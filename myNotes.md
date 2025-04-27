@@ -51,8 +51,13 @@ Task.findOne(req.params.id) returns a Promise, so task.title is undefined becaus
 
 4. Google login flow [Video Moment](https://youtu.be/a75PNthqQOI?t=64)
 5. **Issue 2 login with google**
+
    # the resolution was that i have to be wary with the things that i wrote in authController route, always the frontend & google was sending me correct thing it was at the generateToken the first issue
+
    - try multiple console logs
    - put the login function is sync with the exisiting jwt login, things has to similar
    - there must not be multiple responses,
    - in my app, since i am always loading getProfile page, althought it's a protected route, hence to check for protect it goes to protect and in that time router.post response with a res json and later again responded with a new res json , that caused error, there must not be more than one response per route
+
+6. rethrow error
+   -> if a user had signed up directly via google and now try to signin via email password then the app throw from the backend a 401 error at login endpoint, that error is caught by frontend authStore Login mutation and that is rethrown from this mutation to the component (Login.jsx) and then i could see the toast

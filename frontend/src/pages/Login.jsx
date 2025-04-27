@@ -31,14 +31,16 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     setLoading(true);
+
     try {
       await login(data.email, data.password);
       // console.log(`Logged in as ${user}`);  // Didn't work here because zustand updates are asynchroneous, the 'user' object is not updated immediately after login
 
       
     } catch(error) {
-      toast.error("Login failed");
-      console.error("Login failed:", error);
+      const errorMessage = error.response?.data?.message || "Login failed";
+      toast.error(errorMessage); // Show the exact backend error message
+      console.error("Login failed:", errorMessage);
     }
     finally {
       setLoading(false);
@@ -61,6 +63,8 @@ const Login = () => {
 
   // log the user object after login
   useEffect(() => {
+    console.log('user state updated : ', user);
+    
     if(user){
       // console.log(`Logged in as ${user.email}`);
       toast.success(`Logged in as ${user.name}`);

@@ -2,6 +2,9 @@ import asyncHandler from "express-async-handler";
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 import { verifyGoogleToken } from "../config/googleOAuth.js";
+import sendEmail from "../utils/sendEmail.js";
+import jwt from "jsonwebtoken";
+
 
 // @desc    Register a new user
 // @route   POST /api/auth/signup
@@ -26,6 +29,15 @@ const signup = asyncHandler(async (req, res) => {
 
   if (user) {
     generateToken(res, user._id);
+    // send email
+    await sendEmail(
+      user.email,
+      "Welcome to Brevo",
+      `<p>Hi ${user.name},</p>
+        <p>Thank you for signing up with Brevo. We're excited to have you on board!</p>
+        <p>Feel free to explore our platform and let us know if you have any questions.</p>
+        <p>Best,<br />The Brevo Team</p>`
+    );
     res.status(201).json({
       user: {
         _id: user._id,
@@ -48,6 +60,13 @@ const signup = asyncHandler(async (req, res) => {
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
+  // Check if password exists
+  if (!user.password) {
+    return res.status(401).json({
+      message:
+        "You signed up with Google. Please use Google Sign-In or set a password via Forgot Password.",
+    });
+  }
   if (user && (await user.matchPassword(password))) {
     generateToken(res, user._id);
     res.status(201).json({
@@ -62,6 +81,63 @@ const login = asyncHandler(async (req, res) => {
     res.status(401);
     throw new Error("Invalid email or password");
   }
+});
+
+// @desc    Forget Password
+// @route   POST /api/auth/forgetpassword
+// @access  Public
+const forgetPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  // Check if user exists
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // Generate reset token (valid for 15 mins)
+  const resetToken = jwt.sign(
+    { id: user._id },
+    process.env.JWT_FORGET_PASSWORD_SECRET,
+    { expiresIn: "15m" }
+  );
+
+  // Reset URL
+  const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
+  // Email content
+  const message = `
+      <h2>Password Reset Request</h2>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetUrl}">${resetUrl}</a>
+      <p>If you didn’t request this, ignore this email.</p>
+    `;
+
+  // Send email
+  await sendEmail(email, "Password Reset", message);
+
+  return res.json({ message: "Reset link sent to email" });
+});
+
+// @desc   Reset Password
+// @route  POST /api/auth/resetPassword
+// @access Public
+
+const resetPassword = asyncHandler(async (req, res) => {
+  const { token, password } = req.body;
+  console.log(req.body)
+  // Verify reset token
+  const decoded = jwt.verify(token, process.env.JWT_FORGET_PASSWORD_SECRET);
+  const user = await User.findById(decoded.id);
+  if (!user) {
+    return res.status(400).json({ message: "Invalid or expired token" });
+  }
+
+  console.log("New Password", password);
+  // Hash new password
+  user.password = password;
+  await user.save();
+  return res.json({ message: "Password reset successful" });
+  // return res.json({ message: "Reset Password" });
 });
 
 // @desc UserProfile
@@ -174,7 +250,6 @@ const googleSignIn = asyncHandler(async (req, res) => {
         otpVerified: user.otpVerified,
       },
     });
-    
   } catch (error) {
     console.error("Google authentication error:", error);
     res
@@ -186,6 +261,8 @@ const googleSignIn = asyncHandler(async (req, res) => {
 export {
   signup,
   login,
+  forgetPassword,
+  resetPassword,
   dummy,
   getProfile,
   updateProfile,
